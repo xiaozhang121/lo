@@ -25,8 +25,41 @@ export default {
     return {
       timetotime: [],
       options: [],
-      value: ''
+      value: '',
+      startTime:'',
+      endTime:''
     }
+  },
+  watch:{
+    timetotime(time){
+     this.startTime = time[0]
+     this.endTime = time[1]
+     var s = new Date(this.startTime);
+     var e = new Date(this.endTime);
+     var sm = s.getMonth()
+     var em = e.getMonth()
+     var sd = s.getDate()
+     var ed = e.getDate()
+     if(sm<10){
+       sm = '0'+(sm+1)
+     }
+     if(em<10){
+       em = '0'+(em+1)
+     }
+     if(sd<10){
+       sd = '0'+sd
+     }
+     if(ed<10){
+       ed = '0'+ed
+     }
+       this.startTime=s.getFullYear() + '' + sm + '' + sd;
+       this.endTime=e.getFullYear() + '' + em + '' + ed;
+       this.$emit('childstart',this.startTime)
+       this.$emit('childend',this.endTime)
+    }
+  },
+  methods:{
+
   }
 }
 </script>

@@ -24,18 +24,14 @@
       end-placeholder="结束日期"
       :default-time="['00:00:00', '23:59:59']">
     </el-date-picker>
-    <el-select v-model="table" placeholder="列出表格" class="sel">
-    <el-option
-      v-for="item in options"
-      :key="item.value"
-      :label="item.label"
-      :value="item.value">
-    </el-option>
-  </el-select>
     </div>
 </template>
 <script>
+
+
 export default {
+  created(){
+  },
   data () {
     return {
       timetotime: [],
@@ -48,10 +44,13 @@ export default {
   },
   methods: {
     exportData () {
-      this.$refs.table.exportCsv({
-        filename: 'the'
-      })
-    }
+      console.log(this.$refs.tablesMain)
+
+      // this.$refs.tablesMain.exportCsv({
+      //   filename: 'the'
+      // })
+    },
+    
   }
 }
 </script>

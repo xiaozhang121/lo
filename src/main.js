@@ -8,8 +8,10 @@ import echarts from 'echarts'
 import ViewUI from 'view-design'
 // import style
 import 'view-design/dist/styles/iview.css'
+import axios from 'axios'
 
 Vue.use(ViewUI)
+Vue.prototype.$axios = axios
 
 Vue.prototype.$echarts = echarts
 Vue.use(ElementUI)

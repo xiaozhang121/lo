@@ -18,12 +18,12 @@
     </div>
   <!-- echarts图表 -->
     <div class="ech-intro">
-      <p>4号主变A相汇控柜 2020年4月10日 - 11日温湿度变化</p>
+      <p>{{title}}</p>
       <div class="echarts">
     <div class="echartsone">
     <duno-charts
     :legendOption='legend'
-    :isChange="true"
+    :isChange=show
     :isItemEchart="true"
     :titleOption="{}"
     :xAxisOption="xAxis"
@@ -32,13 +32,13 @@
     </div>
     <div class="echartstwo">
     <duno-charts
-    :legendOption='legend'
-    :isChange="true"
+    :legendOption='legendtwo'
+    :isChange=show
     :isItemEchart="true"
     :titleOption="{}"
-    :xAxisOption="xAxis"
-    :yAxisOption="yAxis"
-    :seriesOption="series"></duno-charts>
+    :xAxisOption="xAxistwo"
+    :yAxisOption="yAxistwo"
+    :seriesOption="seriestwo"></duno-charts>
     </div>
     </div>
     </div>
@@ -69,11 +69,43 @@ import HistorySelect from '@/components/historyselect'
 import HistoryRecord from '@/components/historyrecord'
 import { DunoTablesTep } from '@/components/duno-tables-tep'
 import EleModal from '@/components/element-modal/index.vue'
+import { postAxiosData } from '@/api/axiosType'
 export default {
+  created(){
+    this.postem()
+  },
   methods: {
     childvalue (val) { // 关闭弹窗 父接收子组件传过来的值
       this.showdia = val
-    }
+    },
+    postem () {
+      postAxiosData('lenovo-lora/api/loraPlatform/equipment/lineChartData', 
+      {
+      deviceId:'1',
+      startDate: '20200401',//this.startTime,
+      endDate:'20200408',
+      equipmentType:'oil'
+      }).then(res => {
+        console.log(res)
+         this.change = true
+       this.title = res.data.title
+      //  //温度
+      res.data.oilTemData.map((item,index)=>{
+       item.collectTime = item.collectTime.slice(8,10)
+        this.xAxis.data.push(item.collectTime);
+        this.series[0].data.push(item.oilTemperature)
+        // this.series[1].data.push(item.envTemperature)
+      })
+      // //湿度
+      //  res.data.wetData.map((item,index)=>{
+      //  item.collectTime = item.collectTime.slice(8,10)
+      //   this.xAxistwo.data.push(item.collectTime);
+      //   this.seriestwo[0].data.push(item.humidity)
+      //   this.seriestwo[1].data.push(item.envHumidity)
+      // })
+
+        })  
+    },
   },
   components: {
     HistorySelect,
@@ -84,16 +116,37 @@ export default {
   },
   data () {
     return {
+      title:'',//标题
+      show:false,
       stripe: true, // 表格隔行变色
       showdia: false, // 弹框显示
       dialogId: 0,
       legend: {
+        data: ['油温','环境温度'],
+        textStyle: {
+          color: 'rgb(226, 230, 232)'
+        }
+      },
+      legendtwo: {
         data: ['油位'],
         textStyle: {
           color: 'rgb(226, 230, 232)'
         }
       },
       xAxis: { // x轴坐标
+        type: 'category',
+        boundaryGap: false,
+        data: [],
+        axisLine: {
+          lineStyle: {
+            color: 'rgb(141, 150, 155)'
+          }
+        },
+        axisTick: {
+          show: false
+        }
+      },
+      xAxistwo: { // x轴坐标
         type: 'category',
         boundaryGap: false,
         data: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24],
@@ -116,11 +169,71 @@ export default {
           }
         }
       },
+      yAxistwo: { // y轴坐标
+        type: 'value',
+        name: '(℃)',
+        axisLine: {
+          show: false,
+          lineStyle: {
+            color: 'rgb(141, 150, 155)'
+          }
+        }
+      },
       series: [
+        {
+          name: '油温',
+          type: 'line',
+          symbol:'none',
+          data: [120, 132, 101, 134, 90, 230, 210, 500, 120, 132, 180, 134, 90, 230, 210, 230, 120, 132, 101, 134, 90, 400, 210, 230],
+          color: ['rgb(6, 147, 208)'],
+          markLine: {
+            symbol: 'none', // 去掉警戒线最后面的箭头
+            label: {
+              position: 'end', // 将警示值放在哪个位置，三个值“start”,"middle","end"  开始  中点 结束
+              formatter: '',
+              color: 'red'
+            },
+            data: [{
+              silent: false, // 鼠标悬停事件  true没有，false有
+              lineStyle: { // 警戒线的样式  ，虚实  颜色
+                type: 'dashed',
+                color: 'red'
+              },
+              name: '',
+              yAxis: 400
+            }]
+          }
+        },
+        {
+          name: '环境温度',
+           symbol:'none',
+          type: 'line',
+          data: [120, 132, 101, 134, 90, 230, 210, 500, 120, 132, 101, 134, 90, 230, 210, 230, 120, 132, 101, 134, 90, 400, 210, 230],
+          color: ['rgb(167, 154, 50)'],
+          markLine: {
+            symbol: 'none', // 去掉警戒线最后面的箭头
+            label: {
+              position: 'end', // 将警示值放在哪个位置，三个值“start”,"middle","end"  开始  中点 结束
+              formatter: '',
+              color: 'red'
+            },
+            data: [{
+              silent: false, // 鼠标悬停事件  true没有，false有
+              lineStyle: { // 警戒线的样式  ，虚实  颜色
+                type: 'dashed',
+                color: 'red'
+              },
+              name: '',
+              yAxis: 400
+            }]
+          }
+        }
+      ],
+      seriestwo: [
         {
           name: '油位',
           type: 'line',
-          stack: '总量',
+          symbol:'none',
           data: [120, 132, 101, 134, 90, 230, 210, 500, 120, 132, 101, 134, 90, 230, 210, 230, 120, 132, 101, 134, 90, 400, 210, 230],
           color: ['rgb(7, 177, 184)'],
           markLine: {

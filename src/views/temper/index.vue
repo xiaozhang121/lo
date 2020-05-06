@@ -13,17 +13,17 @@
     <div class="history">
         <div class="his-text">历史数据</div>
         <div class="his-select">
-            <history-select></history-select>
+             <history-select @childstart = 'childstart' @childend = 'childend'></history-select>
         </div>
     </div>
   <!-- echarts图表 -->
     <div class="ech-intro">
-      <p>4号主变A相汇控柜 2020年4月10日 - 11日温湿度变化</p>
+      <p>{{title}}</p>
       <div class="echarts">
     <div class="echartsone">
     <duno-charts
     :legendOption='legend'
-    :isChange="true"
+    :isChange=change
     :isItemEchart="true"
     :titleOption="{}"
     :xAxisOption="xAxis"
@@ -32,13 +32,13 @@
     </div>
     <div class="echartstwo">
     <duno-charts
-    :legendOption='legend'
-    :isChange="true"
+    :legendOption='legendtwo'
+    :isChange= change
     :isItemEchart="true"
     :titleOption="{}"
-    :xAxisOption="xAxis"
-    :yAxisOption="yAxis"
-    :seriesOption="series"></duno-charts>
+    :xAxisOption="xAxistwo"
+    :yAxisOption="yAxistwo"
+    :seriesOption="seriestwo"></duno-charts>
     </div>
     </div>
     </div>
@@ -51,7 +51,7 @@
     </div>
     <!-- table表格 -->
   <duno-tables-tep
-  ref="table"
+    ref="tab"
     :border= false
     :columns="columns"
     :data="dataList"
@@ -70,10 +70,48 @@ import HistorySelect from '@/components/historyselect'
 import HistoryRecord from '@/components/historyrecord'
 import { DunoTablesTep } from '@/components/duno-tables-tep'
 import EleModal from '@/components/element-modal/index.vue'
+import { postAxiosData } from '@/api/axiosType'
 export default {
+  created () {
+    this.postem()
+  },
   methods: {
     childvalue (val) { // 关闭弹窗 父接收子组件传过来的值
       this.showdia = val
+    },
+    postem () {
+      postAxiosData('lenovo-lora/api/loraPlatform/equipment/lineChartData', 
+      {
+      deviceId:'1',
+      startDate: this.startTime,
+      endDate:this.endTime,
+      equipmentType:'teh'
+      }).then(res => {
+        console.log(res)
+        this.change = true
+       this.title = res.data.title
+       //温度
+      res.data.temData.map((item,index)=>{
+       item.collectTime = item.collectTime.slice(8,10)
+        this.xAxis.data.push(item.collectTime);
+        this.series[0].data.push(item.temperature)
+        this.series[1].data.push(item.envTemperature)
+      })
+      //湿度
+       res.data.wetData.map((item,index)=>{
+       item.collectTime = item.collectTime.slice(8,10)
+        this.xAxistwo.data.push(item.collectTime);
+        this.seriestwo[0].data.push(item.humidity)
+        this.seriestwo[1].data.push(item.envHumidity)
+      })
+        })  
+    },
+    childstart(e){
+      this.startTime = e
+    },
+    childend(e){
+      this.endTime = e
+      this.postem()
     }
   },
   components: {
@@ -85,19 +123,29 @@ export default {
   },
   data () {
     return {
+      change:false,
+      startTime:'',
+      endTime:'',
+      title:'',
       stripe: true, // 表格隔行变色
       showdia: false, // 弹框显示
       dialogId: 0,
       legend: { // echarts数据显示
-        data: ['邮件营销', '联盟广告'],
+        data: ['温度', '环境温度'],
         textStyle: {
           color: 'rgb(226, 230, 232)'
         }
       },
-      xAxis: { // x轴坐标
+      legendtwo: { // echarts数据显示
+        data: ['湿度', '环境湿度'],
+        textStyle: {
+          color: 'rgb(226, 230, 232)'
+        }
+      },
+      xAxis: { // 左x轴坐标
         type: 'category',
         boundaryGap: false,
-        data: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24],
+        data: [],
         axisLine: {
           lineStyle: {
             color: 'rgb(141, 150, 155)'
@@ -107,7 +155,30 @@ export default {
           show: false
         }
       },
-      yAxis: { // y轴坐标
+      xAxistwo: { // 右x轴坐标
+        type: 'category',
+        boundaryGap: false,
+        data: [],
+        axisLine: {
+          lineStyle: {
+            color: 'rgb(141, 150, 155)'
+          }
+        },
+        axisTick: {
+          show: false
+        }
+      },
+      yAxis: { // 左y轴坐标
+        type: 'value',
+        name: '(℃)',
+        axisLine: {
+          show: false,
+          lineStyle: {
+            color: 'rgb(141, 150, 155)'
+          }
+        }
+      },
+      yAxistwo: { // 右y轴坐标
         type: 'value',
         name: '(℃)',
         axisLine: {
@@ -119,18 +190,34 @@ export default {
       },
       series: [
         { // echarts数据
-          name: '邮件营销',
+          name: '温度',
           type: 'line',
-          stack: '总量',
-          data: [120, 132, 101, 134, 90, 230, 210, 230, 120, 132, 101, 134, 90, 230, 210, 230, 120, 132, 101, 134, 90, 230, 210, 230],
+          symbol:'none',
+          data: [],
           color: ['rgb(3, 164, 231)']
         },
         {
-          name: '联盟广告',
+          name: '环境温度',
           type: 'line',
-          stack: '总量',
-          data: [120, 132, 101, 134, 90, 230, 210, 230, 120, 132, 101, 134, 90, 230, 210, 230, 120, 132, 101, 134, 90, 230, 210, 230],
+          symbol:'none',
+          data: [],
           color: ['rgb(169, 156, 47)']
+        }
+      ],
+      seriestwo: [
+        { // echarts数据
+          name: '湿度',
+          type: 'line',
+          symbol:'none',
+          data: [],
+          color: ['rgb(6, 203, 207)']
+        },
+        {
+          name: '环境湿度',
+          type: 'line',
+          symbol:'none',
+          data: [],
+          color: ['rgb(112, 103, 208)']
         }
       ],
       columns: [
@@ -182,26 +269,26 @@ export default {
         }
       ],
       dataList: [
-        { // 表格内容
-          name: 'John Brown',
-          age: 18,
-          address: 'New York No. 1 Lake Park'
-        },
-        {
-          name: 'Jim Green',
-          age: 24,
-          address: 'London No. 1 Lake Park'
-        },
-        {
-          name: 'Joe Black',
-          age: 30,
-          address: 'Sydney No. 1 Lake Park'
-        },
-        {
-          name: 'Jon Snow',
-          age: 26,
-          address: 'Ottawa No. 2 Lake Park'
-        }
+        // { // 表格内容
+        //   name: 'John Brown',
+        //   age: 18,
+        //   address: 'New York No. 1 Lake Park'
+        // },
+        // {
+        //   name: 'Jim Green',
+        //   age: 24,
+        //   address: 'London No. 1 Lake Park'
+        // },
+        // {
+        //   name: 'Joe Black',
+        //   age: 30,
+        //   address: 'Sydney No. 1 Lake Park'
+        // },
+        // {
+        //   name: 'Jon Snow',
+        //   age: 26,
+        //   address: 'Ottawa No. 2 Lake Park'
+        // }
       ]
     }
   }

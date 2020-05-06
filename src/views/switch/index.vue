@@ -11,7 +11,7 @@
     <div class="history">
         <div class="his-text">历史数据</div>
         <div class="his-select">
-            <history-select></history-select>
+            <history-select @childstart = 'childstart' @childend = 'childend'></history-select>
         </div>
     </div>
     <div class="ech-intro">
@@ -21,23 +21,13 @@
     <duno-charts
     class="box"
     :legendOption='legend'
-    :isChange="true/false"
+    :isChange= change
     :isItemEchart="true/false"
     :titleOption="{}"
     :xAxisOption="xAxis"
     :yAxisOption="yAxis"
     :seriesOption="series"></duno-charts>
     </div>
-    <!-- <div class="echartstwo">
-    <duno-charts
-    :legendOption='legend'
-    :isChange="true/false"
-    :isItemEchart="true/false"
-    :titleOption="{}"
-    :xAxisOption="xAxis"
-    :yAxisOption="yAxis"
-    :seriesOption="series"></duno-charts>
-    </div> -->
     </div>
     </div>
 
@@ -70,10 +60,46 @@ import HistorySelect from '@/components/historyselect'
 import HistoryRecord from '@/components/historyrecord'
 import { DunoTablesTep } from '@/components/duno-tables-tep'
 import EleModal from '@/components/element-modal/index.vue'
+
+import { postAxiosData } from '@/api/axiosType'
+import { getAxiosData } from '@/api/axiosType'
 export default {
+  created () {
+    this.pos();
+    this.getall()
+  },
   methods: {
     childvalue (val) { // 关闭弹窗 父接收子组件传过来的值
       this.showdia = val
+    },
+    pos () {
+      postAxiosData('lenovo-lora/api/loraPlatform/equipment/lineChartData', 
+      {
+      deviceId:'1',
+      startDate: '20200401',//this.startTime,
+      endDate:'20200408',//this.endTime,
+      equipmentType:'switch'
+      }).then(res => {
+        console.log(res.data.lineChartData)
+        this.change = true
+        this.lineChartData = res.data.lineChartData
+        this.lineChartData.map((item,index)=>{
+          item.collectTime = item.collectTime.slice(8,10)
+          this.xAxis.data.push(item.collectTime);
+          this.series[0].data.push(item.newSwitchA);
+          this.series[1].data.push(item.newSwitchB);
+          this.series[2].data.push(item.newSwitchC)
+        })   
+      })
+    },
+    childstart(e){
+      this.startTime = e
+      console.log(e);
+      
+    },
+    childend(e){
+     this.endTime = e
+     this.pos()
     }
   },
   components: {
@@ -85,9 +111,14 @@ export default {
   },
   data () {
     return {
+      change:false,
+      lineChartData:[],//折线图的所有信息
+      collectTime:[],//x轴时间
+      startTime:'',//子组件的开始时间
+      endTime:'',//子组件的结束时间
       showdia: false,
       legend: {
-        data: ['油位'],
+        data: ['A相','B相','C相'],
         textStyle: {
           color: 'rgb(226, 230, 232)'
         }
@@ -95,7 +126,7 @@ export default {
       xAxis: {
         type: 'category',
         boundaryGap: false,
-        data: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24],
+        data: [],
         axisLine: {
           lineStyle: {
             color: 'rgb(141, 150, 155)'
@@ -107,7 +138,7 @@ export default {
       },
       yAxis: {
         type: 'value',
-        name: '(℃)',
+        name: '次',
         // nameLocation: 'middle',
         axisLine: {
           show: false,
@@ -118,11 +149,62 @@ export default {
       },
       series: [
         {
-          name: '油位',
+          name: 'A相',
           type: 'line',
-          stack: '总量',
-          data: [120, 132, 101, 134, 90, 230, 210, 500, 120, 132, 101, 134, 90, 230, 210, 230, 120, 132, 101, 134, 90, 400, 210, 230],
-          color: ['rgb(7, 177, 184)'],
+          // stack: '总量',
+          data: [],
+          color: ['rgb(0, 178, 253)'],
+          symbol:'none',
+          markLine: {
+            symbol: 'none', // 去掉警戒线最后面的箭头
+            label: {
+              position: 'end', // 将警示值放在哪个位置，三个值“start”,"middle","end"  开始  中点 结束
+              formatter: '',
+              color: 'red'
+            },
+            data: [{
+              silent: false, // 鼠标悬停事件  true没有，false有
+              lineStyle: { // 警戒线的样式  ，虚实  颜色
+                type: 'dashed',
+                color: 'red'
+              },
+              name: '',
+              yAxis: 400
+            }]
+          }
+        },
+        {
+          name: 'B相',
+          type: 'line',
+          // stack: '总量',
+          data: [],
+          symbol:'none',
+          color: ['rgb(71, 213, 167)'],
+          markLine: {
+            symbol: 'none', // 去掉警戒线最后面的箭头
+            label: {
+              position: 'end', // 将警示值放在哪个位置，三个值“start”,"middle","end"  开始  中点 结束
+              formatter: '',
+              color: 'red'
+            },
+            data: [{
+              silent: false, // 鼠标悬停事件  true没有，false有
+              lineStyle: { // 警戒线的样式  ，虚实  颜色
+                type: 'dashed',
+                color: 'red'
+              },
+              name: '',
+              yAxis: 400
+            }]
+          }
+        },
+        {
+          name: 'C相',
+          type: 'line',
+          // stack: '总量',
+          data: [],
+          symbol:'none',
+          color: ['rgb(117, 106, 217)'],
           markLine: {
             symbol: 'none', // 去掉警戒线最后面的箭头
             label: {
@@ -143,26 +225,26 @@ export default {
         }
       ],
       dataList: [
-        {
-          name: 'John Brown',
-          age: 18,
-          address: 'New York No. 1 Lake Park'
-        },
-        {
-          name: 'Jim Green',
-          age: 24,
-          address: 'London No. 1 Lake Park'
-        },
-        {
-          name: 'Joe Black',
-          age: 30,
-          address: 'Sydney No. 1 Lake Park'
-        },
-        {
-          name: 'Jon Snow',
-          age: 26,
-          address: 'Ottawa No. 2 Lake Park'
-        }
+        // {
+        //   name: 'John Brown',
+        //   age: 18,
+        //   address: 'New York No. 1 Lake Park'
+        // },
+        // {
+        //   name: 'Jim Green',
+        //   age: 24,
+        //   address: 'London No. 1 Lake Park'
+        // },
+        // {
+        //   name: 'Joe Black',
+        //   age: 30,
+        //   address: 'Sydney No. 1 Lake Park'
+        // },
+        // {
+        //   name: 'Jon Snow',
+        //   age: 26,
+        //   address: 'Ottawa No. 2 Lake Park'
+        // }
       ],
       columns: [
         { // 表头内容
